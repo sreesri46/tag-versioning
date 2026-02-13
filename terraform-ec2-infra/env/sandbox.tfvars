@@ -1,5 +1,5 @@
 project_id     = "your-gcp-project-id"
 region         = "us-central1"
 zone           = "us-central1-a"
-machine_type   = "e2-micro"
+machine_type   = "e2-micro" #test
 instance_name  = "sandbox-vm"
