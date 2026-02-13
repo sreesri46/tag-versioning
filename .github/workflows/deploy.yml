@@ -1,0 +1,43 @@
+name: Terraform Deploy
+
+on:
+  push:
+    tags:
+      - 'sandbox-*'
+      - 'preprod-*'
+      - 'prod-*'
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      # Authenticate to GCP
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Select Workspace & Apply
+        run: |
+          if [[ $GITHUB_REF == refs/tags/sandbox-* ]]; then
+            terraform workspace select sandbox || terraform workspace new sandbox
+            terraform apply -var-file=env/sandbox.tfvars -auto-approve
+          elif [[ $GITHUB_REF == refs/tags/preprod-* ]]; then
+            terraform workspace select preprod || terraform workspace new preprod
+            terraform apply -var-file=env/preprod.tfvars -auto-approve
+          elif [[ $GITHUB_REF == refs/tags/prod-* ]]; then
+            terraform workspace select prod || terraform workspace new prod
+            terraform apply -var-file=env/prod.tfvars -auto-approve
+          fi
